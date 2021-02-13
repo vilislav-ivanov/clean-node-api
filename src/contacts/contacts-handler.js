@@ -6,7 +6,7 @@ import {
 import makeContact from './contact';
 import makeHttpError from '../helpers/http-error';
 
-const makeContactsEndPoint = (contactRepo) => {
+function makeContactsEndPoint(contactRepo) {
   return (httpRequest) => {
     switch (httpRequest.method) {
       case 'POST':
@@ -79,6 +79,6 @@ const makeContactsEndPoint = (contactRepo) => {
       data: JSON.stringify(result),
     };
   }
-};
+}
 
 export default makeContactsEndPoint;

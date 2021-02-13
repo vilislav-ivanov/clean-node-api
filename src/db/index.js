@@ -1,10 +1,10 @@
 import mongodb from 'mongodb';
 
-const makeIdFromString = (id) => {
+function makeIdFromString(id) {
   return new mongodb.ObjectID(id);
-};
+}
 
-export default async () => {
+export default async function () {
   const MongoClient = mongodb.MongoClient;
   const url = 'mongodb://localhost:27017';
   const dbName = 'mm_api_demo';
@@ -13,4 +13,4 @@ export default async () => {
   const db = client.db(dbName);
   db.makeId = makeIdFromString;
   return db;
-};
+}
