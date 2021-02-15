@@ -2,9 +2,11 @@ import {
   InvalidPropertyError,
   RequiredParamsError,
   UniqueConstraintError,
+  DocumentNotFoundError,
 } from '../helpers/errors';
 import makeContact from './contact';
 import makeHttpError from '../helpers/http-error';
+import requiredParam from '../helpers/required-param';
 
 function makeContactsEndPoint(contactRepo) {
   return (httpRequest) => {
@@ -13,6 +15,8 @@ function makeContactsEndPoint(contactRepo) {
         return postContact(httpRequest);
       case 'GET':
         return getContacts(httpRequest);
+      case 'DELETE':
+        return deleteContact(httpRequest.pathParams);
       default:
         return makeHttpError({
           statusCode: 405,
@@ -92,6 +96,24 @@ function makeContactsEndPoint(contactRepo) {
       statusCode: 200,
       data: JSON.stringify(result),
     };
+  }
+  async function deleteContact(pathParams) {
+    const { id } = pathParams || requiredParam('id');
+    try {
+      const result = await contactRepo.remove({ contactId: id });
+      return {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        statusCode: 200,
+        data: JSON.stringify(result),
+      };
+    } catch (e) {
+      return makeHttpError({
+        errorMessage: e.message,
+        statusCode: e instanceof DocumentNotFoundError ? 404 : 500,
+      });
+    }
   }
 }
 

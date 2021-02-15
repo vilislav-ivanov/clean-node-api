@@ -1,5 +1,8 @@
 import makeContact from './contact';
-import { UniqueConstraintError } from '../helpers/errors';
+import {
+  UniqueConstraintError,
+  DocumentNotFoundError,
+} from '../helpers/errors';
 
 function documentToContact({ _id: contactId, ...doc }) {
   return makeContact({ contactId, ...doc });
@@ -11,7 +14,7 @@ const makeContactRepo = (database) => {
     findById,
     getItems,
     update,
-    // remove,
+    remove,
   });
 
   async function add({ contactId, ...contact }) {
@@ -40,6 +43,7 @@ const makeContactRepo = (database) => {
 
   async function findById({ contactId }) {
     const db = await database;
+    contactId = db.makeId(contactId);
     const found = await db.collection('contacts').findOne({ _id: contactId });
     if (found) {
       return documentToContact(found);
@@ -76,15 +80,28 @@ const makeContactRepo = (database) => {
         returnOriginal: false,
       })
       .catch((mongoError) => {
-        // maybe check error
-        console.log('HERE?');
-        console.log(mongoError);
         throw mongoError;
       });
     return {
       success: result.ok === 1,
       updatedContact: documentToContact(result.value),
     };
+  }
+
+  async function remove({ contactId }) {
+    const db = await database;
+    contactId = db.makeId(contactId);
+    const result = await db
+      .collection('contacts')
+      .findOneAndDelete({ _id: contactId });
+    if (result.value) {
+      return {
+        deleted: result.value !== null,
+        deletedContact: documentToContact(result.value),
+      };
+    } else {
+      throw new DocumentNotFoundError(contactId);
+    }
   }
 };
 
