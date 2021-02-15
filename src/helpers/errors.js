@@ -27,3 +27,13 @@ export class RequiredParamsError extends Error {
     }
   }
 }
+
+export class DocumentNotFoundError extends Error {
+  constructor(docId) {
+    super(`${docId} was not found in db.`);
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, DocumentNotFoundError);
+    }
+  }
+}
