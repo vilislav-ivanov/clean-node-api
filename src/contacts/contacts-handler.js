@@ -23,6 +23,9 @@ function makeContactsEndPoint(contactRepo) {
 
   async function postContact(httpRequest) {
     let contactInfo = httpRequest.body;
+    const { id } = httpRequest.pathParams || {};
+    const { firstName, lastName, emailAddress } = contactInfo;
+
     if (!contactInfo) {
       return makeHttpError({
         statusCode: 400,
@@ -42,13 +45,24 @@ function makeContactsEndPoint(contactRepo) {
     }
 
     try {
-      const contact = makeContact(contactInfo);
-      const result = await contactRepo.add(contact);
+      let contact;
+      if (!id) {
+        contact = makeContact(contactInfo);
+      }
+      if (id && !firstName && !lastName && !emailAddress) {
+        return makeHttpError({
+          statusCode: 400,
+          errorMessage: 'Bad request. No POST body.',
+        });
+      }
+      const result = id
+        ? await contactRepo.update({ contactId: id, ...contactInfo })
+        : await contactRepo.add(contact);
       return {
         headers: {
           'Content-Type': 'application/json',
         },
-        statusCode: 201,
+        statusCode: 200,
         data: JSON.stringify(result),
       };
     } catch (e) {

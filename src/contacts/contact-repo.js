@@ -10,6 +10,8 @@ const makeContactRepo = (database) => {
     add,
     findById,
     getItems,
+    update,
+    // remove,
   });
 
   async function add({ contactId, ...contact }) {
@@ -25,7 +27,7 @@ const makeContactRepo = (database) => {
         if (errorCode === 'E11000') {
           const [_, mongoIndex] = mongoError.message.split(':')[2].split(' ');
           throw new UniqueConstraintError(
-            mongoIndex === 'ContactEmailIndex' ? 'emailAddress' : 'contactId'
+            mongoIndex === 'emailAddress_1' ? 'emailAddress' : 'contactId'
           );
         }
         throw mongoError;
@@ -57,6 +59,32 @@ const makeContactRepo = (database) => {
       await db.collection('contacts').find(query).limit(Number(limit)).toArray()
     ).map(documentToContact);
     return contacts;
+  }
+
+  async function update({ contactId, firstName, lastName, emailAddress }) {
+    const db = await database;
+    const updated = {
+      $set: {},
+    };
+    contactId = db.makeId(contactId);
+    firstName ? (updated.$set.firstName = firstName) : null;
+    lastName ? (updated.$set.lastName = lastName) : null;
+    emailAddress ? (updated.$set.emailAddress = emailAddress) : null;
+    const result = await db
+      .collection('contacts')
+      .findOneAndUpdate({ _id: contactId }, updated, {
+        returnOriginal: false,
+      })
+      .catch((mongoError) => {
+        // maybe check error
+        console.log('HERE?');
+        console.log(mongoError);
+        throw mongoError;
+      });
+    return {
+      success: result.ok === 1,
+      updatedContact: documentToContact(result.value),
+    };
   }
 };
 

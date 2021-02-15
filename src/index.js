@@ -8,7 +8,7 @@ app.use(bodyParser.json());
 
 app.get('/', (req, res) => res.json({ msg: 'Hello' }));
 app.all('/api/contacts', contactController);
-app.get('/api/contacts/:id', contactController);
+app.all('/api/contacts/:id', contactController);
 
 function contactController(req, res) {
   const httpRequest = adaptRequest(req);
